@@ -20,21 +20,15 @@
 */
 
 #include <SDL.h>
+#include "config.hpp"
 #include "window.hpp"
-#include "renderer.hpp"
-#include "texture.hpp"
-
 using SDL::Window;
-using SDL::Texture;
 
 const int ERR_SDL_INIT = -1;
 
 bool init(Uint32 sdlInitFlags)
 {
-	if(SDL_Init(sdlInitFlags) < 0) {
-		return false;
-	}
-	return true;
+	return SDL_Init(sdlInitFlags) == 0;
 }
 
 void quit()
@@ -44,24 +38,17 @@ void quit()
 
 void gameLoop()
 {
-	Uint32 rendererFlags = SDL_RENDERER_ACCELERATED
-		| SDL_RENDERER_PRESENTVSYNC
-		| SDL_RENDERER_TARGETTEXTURE;
+	const int windowWidth = Window::DEFAULT_WIDTH;
+	const int windowHeight = Window::DEFAULT_HEIGHT;
 
-	Window window("test", Window::DEFAULT_WIDTH, Window::DEFAULT_HEIGHT,
+	Window window("test", windowWidth, windowHeight,
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		Window::DEFAULT_INIT_FLAGS, rendererFlags);
-	const int windowWidth = window.getWidth();
-	const int windowHeight = window.getHeight();
+		SDL_WINDOW_RESIZABLE);
+	int logicalWidth = 100;
+	int logicalHeight = 100;
+	const SDL_Rect rect{0, 0, windowWidth, windowHeight};
 
-	// get first supported format
-	SDL_RendererInfo info;
-	window.renderer.getInfo(&info);
-	Uint32 format = *(info.texture_formats);
-	const int textureWidth = 100;
-	const int textureHeight = 100;
-	Texture targetTexture = window.renderer.makeTexture(format,
-		SDL_TEXTUREACCESS_TARGET, textureWidth, textureHeight);
+	window.renderer.setLogicalSize(logicalWidth, logicalHeight);
 
 	bool quit = false;
 	while(!quit) {
@@ -69,27 +56,16 @@ void gameLoop()
 		while(SDL_PollEvent(&e)) {
 			if(e.type == SDL_QUIT) {
 				quit = true;
+			} else if(e.type == SDL_KEYDOWN) {
 			}
 		}
-
-		window.renderer.setDrawColor(0, 0, 0, 0xff);
+		window.renderer.setDrawColor(0x00, 0x00, 0x00, 0xff);
 		window.renderer.clear();
 
-		bool targetIsSet = window.renderer.setTarget(targetTexture);
-		if(!targetIsSet) {
-			SDL_Log("setTarget doesn't work: %s", SDL_GetError());
-			break;
-		}
-		window.renderer.setDrawColor(0xff, 0xff, 0xff, 0xff);
-		window.renderer.drawLine(textureWidth / 2, 0,
-			textureWidth / 2, 100);
-		window.renderer.drawLine(0, textureHeight / 2,
-			100, textureHeight / 2);
-
-		window.renderer.setTarget(nullptr);
-		window.renderer.render(targetTexture,
-			(windowWidth - textureWidth) / 2,
-			(windowHeight - textureHeight) / 2);
+		window.renderer.setDrawColor(0xff, 0x00, 0x00, 0xff);
+		// the red portion should always appear as a square, regardless
+		// of the window's dimensions
+		window.renderer.fillRect(&rect);
 
 		window.renderer.present();
 	}
@@ -97,8 +73,7 @@ void gameLoop()
 
 int main(int argc, char **argv)
 {
-	Uint32 sdlFlags = SDL_INIT_VIDEO;
-	if(!init(sdlFlags)) {
+	if(!init(SDL_INIT_VIDEO)) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_ERROR,
 			"couldn't initialize SDL\n");
 		return ERR_SDL_INIT;

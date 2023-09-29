@@ -20,21 +20,15 @@
 */
 
 #include <SDL.h>
+#include "config.hpp"
 #include "window.hpp"
-#include "renderer.hpp"
-#include "texture.hpp"
-
 using SDL::Window;
-using SDL::Texture;
 
 const int ERR_SDL_INIT = -1;
 
 bool init(Uint32 sdlInitFlags)
 {
-	if(SDL_Init(sdlInitFlags) < 0) {
-		return false;
-	}
-	return true;
+	return SDL_Init(sdlInitFlags) == 0;
 }
 
 void quit()
@@ -44,24 +38,19 @@ void quit()
 
 void gameLoop()
 {
-	Uint32 rendererFlags = SDL_RENDERER_ACCELERATED
-		| SDL_RENDERER_PRESENTVSYNC
-		| SDL_RENDERER_TARGETTEXTURE;
-
-	Window window("test", Window::DEFAULT_WIDTH, Window::DEFAULT_HEIGHT,
-		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		Window::DEFAULT_INIT_FLAGS, rendererFlags);
+	Window window("test");
 	const int windowWidth = window.getWidth();
 	const int windowHeight = window.getHeight();
+	const SDL_Rect screenRect{0, 0, windowWidth, windowHeight};
 
-	// get first supported format
-	SDL_RendererInfo info;
-	window.renderer.getInfo(&info);
-	Uint32 format = *(info.texture_formats);
-	const int textureWidth = 100;
-	const int textureHeight = 100;
-	Texture targetTexture = window.renderer.makeTexture(format,
-		SDL_TEXTUREACCESS_TARGET, textureWidth, textureHeight);
+	const SDL_Rect viewport1{0, 0,
+		windowWidth * 2 / 5, windowHeight * 2 / 5};
+	const SDL_Rect viewport2{windowWidth * 3 / 5, 0,
+		windowWidth * 2 / 5, windowHeight * 3 / 8};
+	const SDL_Rect viewport3{windowWidth * 3 / 5, windowHeight * 3 / 5,
+		windowWidth * 2 / 5, windowHeight * 2 / 5};
+	const SDL_Rect viewport4{0, windowHeight * 3 / 5,
+		windowWidth * 2 / 5, windowHeight * 2 / 5};
 
 	bool quit = false;
 	while(!quit) {
@@ -71,25 +60,30 @@ void gameLoop()
 				quit = true;
 			}
 		}
-
-		window.renderer.setDrawColor(0, 0, 0, 0xff);
+		window.renderer.setDrawColor(0x00, 0x00, 0x00, 0xff); // black
 		window.renderer.clear();
 
-		bool targetIsSet = window.renderer.setTarget(targetTexture);
-		if(!targetIsSet) {
-			SDL_Log("setTarget doesn't work: %s", SDL_GetError());
-			break;
-		}
-		window.renderer.setDrawColor(0xff, 0xff, 0xff, 0xff);
-		window.renderer.drawLine(textureWidth / 2, 0,
-			textureWidth / 2, 100);
-		window.renderer.drawLine(0, textureHeight / 2,
-			100, textureHeight / 2);
+		// after this, the background color should be red
+		window.renderer.setDrawColor(0xff, 0x00, 0x00, 0xff);
+		window.renderer.setViewport(nullptr);
+		window.renderer.fillRect(&screenRect);
 
-		window.renderer.setTarget(nullptr);
-		window.renderer.render(targetTexture,
-			(windowWidth - textureWidth) / 2,
-			(windowHeight - textureHeight) / 2);
+		window.renderer.setDrawColor(0xff, 0xff, 0xff, 0xff); // white
+
+		// all fillRect() calls below shouldn't fill the whole screen,
+		// but rather only the viewports
+	
+		window.renderer.setViewport(&viewport1);
+		window.renderer.fillRect(&screenRect);
+
+		window.renderer.setViewport(&viewport2);
+		window.renderer.fillRect(&screenRect);
+
+		window.renderer.setViewport(&viewport3);
+		window.renderer.fillRect(&screenRect);
+
+		window.renderer.setViewport(&viewport4);
+		window.renderer.fillRect(&screenRect);
 
 		window.renderer.present();
 	}
@@ -97,8 +91,7 @@ void gameLoop()
 
 int main(int argc, char **argv)
 {
-	Uint32 sdlFlags = SDL_INIT_VIDEO;
-	if(!init(sdlFlags)) {
+	if(!init(SDL_INIT_VIDEO)) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_ERROR,
 			"couldn't initialize SDL\n");
 		return ERR_SDL_INIT;

@@ -41,6 +41,11 @@ void gameLoop()
 	SDL_Log("window width: %d", window.getWidth());
 	SDL_Log("window height: %d", window.getHeight());
 
+	int outputWidth, outputHeight;
+	window.renderer.getOutputSize(&outputWidth, &outputHeight);
+	SDL_Log("renderer output width: %d", outputWidth);
+	SDL_Log("renderer output height: %d", outputHeight);
+
 	window.renderer.setDrawColor(0, 0, 0, 255); // black
 
 	bool quit = false;
