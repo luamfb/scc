@@ -49,10 +49,15 @@ void quit()
 void gameLoop()
 {
 	SDL::Window window("test");
-	SDL::Texture imgTexture = window.renderer.makeTexture(imagePath);
+	int windowWidth = window.getWidth();
+	int windowHeight = window.getHeight();
 
-	SDL_Log("texture width: %d", imgTexture.getWidth());
-	SDL_Log("texture height: %d", imgTexture.getHeight());
+	SDL::Texture imgTexture = window.renderer.makeTexture(imagePath);
+	int textureWidth = imgTexture.getWidth();
+	int textureHeight = imgTexture.getHeight();
+
+	SDL_Log("texture width: %d", textureWidth);
+	SDL_Log("texture height: %d", textureHeight);
 
 	bool quit = false;
 	while(!quit) {
@@ -62,16 +67,14 @@ void gameLoop()
 				quit = true;
 			}
 		}
-		window.renderer.setRenderDrawColor(255, 255, 255, 255);
-		window.renderer.renderClear();
+		window.renderer.setDrawColor(255, 255, 255, 255);
+		window.renderer.clear();
 
-		imgTexture.render(
-			window.renderer,
-			(window.getWidth() - imgTexture.getWidth()) / 2,
-			(window.getHeight() - imgTexture.getHeight()) / 2
-		);
+		window.renderer.render(imgTexture,
+			(windowWidth - textureWidth) / 2,
+			(windowHeight - textureHeight) / 2);
 
-		window.renderer.renderPresent();
+		window.renderer.present();
 	}
 }
 

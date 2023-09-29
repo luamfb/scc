@@ -51,10 +51,10 @@ inline void parseWindowEvent(const SDL_Event &e, Window &window)
 void gameLoop()
 {
 	Window window("test", Window::DEFAULT_WIDTH, Window::DEFAULT_HEIGHT,
-		Window::DEFAULT_X_COORD, Window::DEFAULT_Y_COORD,
+		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOW_RESIZABLE);
 
-	window.renderer.setRenderDrawColor(0, 0, 0, 255); // black
+	window.renderer.setDrawColor(0, 0, 0, 255); // black
 
 	bool quit = false;
 	while(!quit) {
@@ -66,8 +66,8 @@ void gameLoop()
 				parseWindowEvent(e, window);
 			}
 		}
-		window.renderer.renderClear();
-		window.renderer.renderPresent();
+		window.renderer.clear();
+		window.renderer.present();
 	}
 }
 
