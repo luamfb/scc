@@ -20,7 +20,6 @@
 */
 
 // config.hpp: configure available libs and make preliminary checks.
-// Make sure to include SDL.h before this!
 #ifndef SCC_CONFIG_HPP
 #define SCC_CONFIG_HPP
 
@@ -32,14 +31,6 @@
 #if NULL != 0
 # undef NULL
 # define NULL 0
-#endif
-
-#if !defined(SDL_MAJOR_VERSION) || !defined(SDL_MINOR_VERSION)
-# error "Could not determine the SDL version. Is SDL.h included?"
-#endif
-
-#if SDL_MAJOR_VERSION < 2
-# error "at least SDL 2.0 is needed."
 #endif
 
 // if you want one of these libs, uncomment its macro's respective define or
